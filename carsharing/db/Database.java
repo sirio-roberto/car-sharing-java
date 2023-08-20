@@ -1,5 +1,6 @@
 package carsharing.db;
 
+import carsharing.Car;
 import carsharing.Company;
 
 import java.sql.*;
@@ -13,9 +14,22 @@ public class Database {
             name VARCHAR(255) UNIQUE NOT NULL
             );""";
 
+    private final String CREATE_CAR_TB = """
+            CREATE TABLE IF NOT EXISTS CAR (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(255) UNIQUE NOT NULL
+            company_id INT NOT NULL
+            CONSTRAINT fk_company FOREIGN KEY (company_id)
+            REFERENCES COMPANY(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            );""";
+
     private final String INSERT_COMPANY = "INSERT INTO COMPANY (name) VALUES (?);";
+    private final String INSERT_CAR = "INSERT INTO CAR (name, company_id) VALUES (?, ?);";
 
     private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY;";
+    private final String SELECT_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ?;";
     private String URL = "jdbc:h2:./src/carsharing/db/";
     private Connection conn;
 
@@ -33,10 +47,18 @@ public class Database {
     }
 
     public void createCompanyTable() {
+        createTable(CREATE_COMPANY_TB);
+    }
+
+    public void createCarTable() {
+        createTable(CREATE_CAR_TB);
+    }
+
+    private void createTable(String createTableQuery) {
         Statement st = null;
         try {
             st = getConnection().createStatement();
-            st.executeUpdate(CREATE_COMPANY_TB);
+            st.executeUpdate(createTableQuery);
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
         } finally {
@@ -49,6 +71,20 @@ public class Database {
         try {
             st = getConnection().prepareStatement(INSERT_COMPANY);
             st.setString(1, company.getName());
+            st.executeUpdate();
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeStatement(st);
+        }
+    }
+
+    public void insertCar(Car car) {
+        PreparedStatement st = null;
+        try {
+            st = getConnection().prepareStatement(INSERT_CAR);
+            st.setString(1, car.getName());
+            st.setInt(2, car.getCompany().getId());
             st.executeUpdate();
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -77,6 +113,30 @@ public class Database {
             closeStatement(st);
         }
         return companies;
+    }
+
+    public List<Car> getCarsByCompany(Company company) {
+        List<Car> cars = new ArrayList<>();
+        PreparedStatement st = null;
+        ResultSet rs = null;
+        try {
+            st = getConnection().prepareStatement(SELECT_CARS_BY_COMPANY);
+            st.setInt(1, company.getId());
+
+            rs = st.executeQuery();
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                cars.add(new Car(id, name, company));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeResultSet(rs);
+            closeStatement(st);
+        }
+        return cars;
     }
 
     private static void closeStatement(Statement statement) {
