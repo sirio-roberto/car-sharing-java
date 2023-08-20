@@ -1,13 +1,19 @@
 package carsharing.db;
 
+import carsharing.Company;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Database {
     private final String CREATE_COMPANY_TB = """
             CREATE TABLE COMPANY (
             id INT PRIMARY KEY,
-            name VARCHAR(255)
+            name VARCHAR(255) UNIQUE NOT NULL
             );""";
+
+    private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY";
     private String URL = "jdbc:h2:./src/carsharing/db/";
     private Connection conn;
 
@@ -34,6 +40,28 @@ public class Database {
         } finally {
             closeStatement(st);
         }
+    }
+
+    public List<Company> getAllCompanies() {
+        List<Company> companies = new ArrayList<>();
+        Statement st = null;
+        ResultSet rs = null;
+        try {
+            st = getConnection().createStatement();
+            rs = st.executeQuery(SELECT_ALL_COMPANIES);
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                companies.add(new Company(id, name));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeResultSet(rs);
+            closeStatement(st);
+        }
+        return companies;
     }
 
     private static void closeStatement(Statement statement) {
