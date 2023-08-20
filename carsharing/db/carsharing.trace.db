@@ -1,0 +1,78 @@
+2023-08-18 11:55:20 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY IF[*] NOT EXISTS (
+ID INT PRIMARY KEY
+NAME VARCHAR(255)
+);"; SQL statement:
+CREATE TABLE company IF NOT EXISTS (
+id INT PRIMARY KEY
+name VARCHAR(255)
+); [42000-200]
+2023-08-18 11:55:20 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY IF[*] NOT EXISTS (
+ID INT PRIMARY KEY
+NAME VARCHAR(255)
+);"; SQL statement:
+CREATE TABLE company IF NOT EXISTS (
+id INT PRIMARY KEY
+name VARCHAR(255)
+); [42000-200]
+2023-08-18 11:56:10 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY IF[*] NOT EXISTS (
+ID INT PRIMARY KEY
+NAME VARCHAR(255)
+);"; SQL statement:
+CREATE TABLE COMPANY IF NOT EXISTS (
+id INT PRIMARY KEY
+name VARCHAR(255)
+); [42000-200]
+2023-08-18 11:56:10 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY IF[*] NOT EXISTS (
+ID INT PRIMARY KEY
+NAME VARCHAR(255)
+);"; SQL statement:
+CREATE TABLE COMPANY IF NOT EXISTS (
+id INT PRIMARY KEY
+name VARCHAR(255)
+); [42000-200]
+2023-08-18 11:56:32 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY (
+ID INT PRIMARY KEY
+NAME[*] VARCHAR(255)
+);"; expected "HASH, AUTO_INCREMENT, NOT, NULL, COMMENT, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE COMPANY (
+id INT PRIMARY KEY
+name VARCHAR(255)
+); [42001-200]
+2023-08-18 11:56:32 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY (
+ID INT PRIMARY KEY
+NAME[*] VARCHAR(255)
+);"; expected "HASH, AUTO_INCREMENT, NOT, NULL, COMMENT, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE COMPANY (
+id INT PRIMARY KEY
+name VARCHAR(255)
+); [42001-200]
+2023-08-18 11:57:45 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY (
+ID INT PRIMARY KEY AUTO_INCREMENT
+NAME[*] VARCHAR(255)
+);"; expected "(, NOT, NULL, COMMENT, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE COMPANY (
+id INT PRIMARY KEY AUTO_INCREMENT
+name VARCHAR(255)
+); [42001-200]
+2023-08-18 11:57:45 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE COMPANY (
+ID INT PRIMARY KEY AUTO_INCREMENT
+NAME[*] VARCHAR(255)
+);"; expected "(, NOT, NULL, COMMENT, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE COMPANY (
+id INT PRIMARY KEY AUTO_INCREMENT
+name VARCHAR(255)
+); [42001-200]
+2023-08-18 11:58:46 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "COMPANY" already exists; SQL statement:
+CREATE TABLE COMPANY (
+id INT PRIMARY KEY,
+name VARCHAR(255)
+); [42101-200]
