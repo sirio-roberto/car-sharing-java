@@ -15,6 +15,18 @@ public class App {
 
     public void run() {
         db.createCompanyTable();
+
+        String userAction;
+        do {
+            System.out.println("""
+                1. Log in as a manager
+                0. Exit""");
+
+            userAction = scan.nextLine();
+            if ("1".equals(userAction)) {
+                new ManagerLoginCommand().execute();
+            }
+        } while (!"0".equals(userAction));
     }
 
 
@@ -37,12 +49,17 @@ public class App {
             System.out.println();
 
             switch (userAction) {
-                case "1" -> new listCompaniesCommand().execute();
+                case "1" -> new ListCompaniesCommand().execute();
+                case "2" -> new CreateCompanyCommand().execute();
+            }
+
+            if (!"0".equals(userAction)) {
+                execute();
             }
         }
     }
 
-    private class listCompaniesCommand extends Command {
+    private class ListCompaniesCommand extends Command {
 
         @Override
         void execute() {
@@ -50,8 +67,22 @@ public class App {
             if (companies.isEmpty()) {
                 System.out.println("The company list is empty!");
             } else {
+                System.out.println("Company list:");
                 companies.forEach(System.out::println);
             }
+        }
+    }
+
+    private class CreateCompanyCommand extends Command {
+
+        @Override
+        void execute() {
+            System.out.println("Enter the company name:");
+            String name = scan.nextLine();
+            Company company = new Company(name);
+
+            db.insertCompany(company);
+            System.out.println("The company was created!");
         }
     }
 }

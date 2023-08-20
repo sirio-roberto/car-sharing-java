@@ -8,12 +8,14 @@ import java.util.List;
 
 public class Database {
     private final String CREATE_COMPANY_TB = """
-            CREATE TABLE COMPANY (
-            id INT PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS COMPANY (
+            id INT PRIMARY KEY AUTO_INCREMENT,
             name VARCHAR(255) UNIQUE NOT NULL
             );""";
 
-    private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY";
+    private final String INSERT_COMPANY = "INSERT INTO COMPANY (name) VALUES (?);";
+
+    private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY;";
     private String URL = "jdbc:h2:./src/carsharing/db/";
     private Connection conn;
 
@@ -35,6 +37,19 @@ public class Database {
         try {
             st = getConnection().createStatement();
             st.executeUpdate(CREATE_COMPANY_TB);
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeStatement(st);
+        }
+    }
+
+    public void insertCompany(Company company) {
+        PreparedStatement st = null;
+        try {
+            st = getConnection().prepareStatement(INSERT_COMPANY);
+            st.setString(1, company.getName());
+            st.executeUpdate();
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
         } finally {
