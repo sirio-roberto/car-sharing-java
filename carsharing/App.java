@@ -14,8 +14,6 @@ public class App {
     }
 
     public void run() {
-        db.createCompanyTable();
-
         String userAction;
         do {
             System.out.println("""
@@ -59,6 +57,37 @@ public class App {
         }
     }
 
+    private class ManageCarsCommand extends Command {
+        private final Company company;
+
+        public ManageCarsCommand(Company company) {
+            this.company = company;
+        }
+
+        @Override
+        void execute() {
+            System.out.printf("""
+                    
+                    '%s' company
+                    1. Car list
+                    2. Create a car
+                    0. Back
+                    """, company.getName());
+
+            String userAction = scan.nextLine();
+            System.out.println();
+
+            switch (userAction) {
+                case "1" -> new ListCarsCommand(company).execute();
+                case "2" -> new CreateCarCommand(company).execute();
+            }
+
+            if (!"0".equals(userAction)) {
+                execute();
+            }
+        }
+    }
+
     private class ListCompaniesCommand extends Command {
 
         @Override
@@ -67,8 +96,36 @@ public class App {
             if (companies.isEmpty()) {
                 System.out.println("The company list is empty!");
             } else {
-                System.out.println("Company list:");
-                companies.forEach(System.out::println);
+                System.out.println("Choose the company:");
+                for (int i = 0; i < companies.size(); i++) {
+                    System.out.printf("%s. %s\n", i + 1, companies.get(i).getName());
+                }
+                System.out.println("0. Back");
+
+                String userAction = scan.nextLine();
+                if (!"0".equals(userAction)) {
+                    new ManageCarsCommand(companies.get(Integer.parseInt(userAction) - 1)).execute();
+                }
+            }
+        }
+    }
+
+    private class ListCarsCommand extends Command {
+        private final Company company;
+
+        public ListCarsCommand(Company company) {
+            this.company = company;
+        }
+        @Override
+        void execute() {
+            List<Car> cars = db.getCarsByCompany(company);
+            if (cars.isEmpty()) {
+                System.out.println("The car list is empty!");
+            } else {
+                System.out.println("Car list:");
+                for (int i = 0; i < cars.size(); i++) {
+                    System.out.printf("%s. %s\n", i + 1, cars.get(i).getName());
+                }
             }
         }
     }
@@ -83,6 +140,24 @@ public class App {
 
             db.insertCompany(company);
             System.out.println("The company was created!");
+        }
+    }
+
+    private class CreateCarCommand extends Command {
+        private final Company company;
+
+        public CreateCarCommand(Company company) {
+            this.company = company;
+        }
+
+        @Override
+        void execute() {
+            System.out.println("Enter the car name:");
+            String name = scan.nextLine();
+            Car car = new Car(name, company);
+
+            db.insertCar(car);
+            System.out.println("The car was created!");
         }
     }
 }

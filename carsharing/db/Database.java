@@ -17,8 +17,8 @@ public class Database {
     private final String CREATE_CAR_TB = """
             CREATE TABLE IF NOT EXISTS CAR (
             id INT PRIMARY KEY AUTO_INCREMENT,
-            name VARCHAR(255) UNIQUE NOT NULL
-            company_id INT NOT NULL
+            name VARCHAR(255) UNIQUE NOT NULL,
+            company_id INT NOT NULL,
             CONSTRAINT fk_company FOREIGN KEY (company_id)
             REFERENCES COMPANY(id)
             ON DELETE CASCADE
@@ -27,7 +27,6 @@ public class Database {
 
     private final String INSERT_COMPANY = "INSERT INTO COMPANY (name) VALUES (?);";
     private final String INSERT_CAR = "INSERT INTO CAR (name, company_id) VALUES (?, ?);";
-
     private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY;";
     private final String SELECT_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ?;";
     private String URL = "jdbc:h2:./src/carsharing/db/";
@@ -35,6 +34,9 @@ public class Database {
 
     public Database(String dbName) {
         URL += dbName;
+
+        createCompanyTable();
+        createCarTable();
     }
 
     private Connection getConnection() throws SQLException {
