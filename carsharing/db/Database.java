@@ -2,6 +2,7 @@ package carsharing.db;
 
 import carsharing.Car;
 import carsharing.Company;
+import carsharing.Customer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -25,9 +26,22 @@ public class Database {
             ON UPDATE CASCADE
             );""";
 
+    private final String CREATE_CUSTOMER_TB = """
+            CREATE TABLE IF NOT EXISTS CUSTOMER (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            rent_car_id INT,
+            CONSTRAINT fk_car FOREIGN KEY (rent_car_id)
+            REFERENCES CAR(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            );""";
+
     private final String INSERT_COMPANY = "INSERT INTO COMPANY (name) VALUES (?);";
     private final String INSERT_CAR = "INSERT INTO CAR (name, company_id) VALUES (?, ?);";
+    private final String INSERT_CUSTOMER = "INSERT INTO CUSTOMER (name) VALUES (?);";
     private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY;";
+    private final String SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMER;";
     private final String SELECT_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ?;";
     private String URL = "jdbc:h2:./src/carsharing/db/";
     private Connection conn;
@@ -37,6 +51,7 @@ public class Database {
 
         createCompanyTable();
         createCarTable();
+        createCustomerTable();
     }
 
     private Connection getConnection() throws SQLException {
@@ -54,6 +69,10 @@ public class Database {
 
     public void createCarTable() {
         createTable(CREATE_CAR_TB);
+    }
+
+    private void createCustomerTable() {
+        createTable(CREATE_CUSTOMER_TB);
     }
 
     private void createTable(String createTableQuery) {
@@ -95,6 +114,19 @@ public class Database {
         }
     }
 
+    public void insertCustomer(Customer customer) {
+        PreparedStatement st = null;
+        try {
+            st = getConnection().prepareStatement(INSERT_CUSTOMER);
+            st.setString(1, customer.getName());
+            st.executeUpdate();
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeStatement(st);
+        }
+    }
+
     public List<Company> getAllCompanies() {
         List<Company> companies = new ArrayList<>();
         Statement st = null;
@@ -115,6 +147,28 @@ public class Database {
             closeStatement(st);
         }
         return companies;
+    }
+
+    public List<Customer> getAllCustomers() {
+        List<Customer> customers = new ArrayList<>();
+        Statement st = null;
+        ResultSet rs = null;
+        try {
+            st = getConnection().createStatement();
+            rs = st.executeQuery(SELECT_ALL_CUSTOMERS);
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                customers.add(new Customer(id, name, null));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeResultSet(rs);
+            closeStatement(st);
+        }
+        return customers;
     }
 
     public List<Car> getCarsByCompany(Company company) {
