@@ -305,7 +305,7 @@ public class App {
         }
     }
 
-    private class ShowRentedCarCommand extends Command {
+    private static class ShowRentedCarCommand extends Command {
         private final Customer customer;
 
         private ShowRentedCarCommand(Customer customer) {
