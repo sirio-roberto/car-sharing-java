@@ -116,6 +116,8 @@ public class App {
 
             switch (userAction) {
                 case "1" -> new RentCarCommand(customer).execute();
+                case "2" -> new ReturnCarCommand(customer).execute();
+                case "3" -> new ShowRentedCarCommand(customer).execute();
             }
 
             if (!"0".equals(userAction)) {
@@ -255,6 +257,8 @@ public class App {
 
                 String userAction = scan.nextLine();
                 if (!"0".equals(userAction)) {
+                    System.out.println();
+
                     Company selectedCompany = companies.get(Integer.parseInt(userAction) - 1);
                     List<Car> companyCars = db.getCarsByCompany(selectedCompany, false);
 
@@ -267,10 +271,56 @@ public class App {
                         }
 
                         String userChoice = scan.nextLine();
-                        Car chosenCar = companyCars.get(Integer.parseInt(userChoice) - 1);
-                        db.rentCar(customer, chosenCar);
+                        try {
+                            Car chosenCar = companyCars.get(Integer.parseInt(userChoice) - 1);
+
+                            db.updateCarRental(customer, chosenCar, true);
+                            customer.setCar(chosenCar);
+                            System.out.printf("You rented '%s'\n", chosenCar.getName());
+                        } catch (IndexOutOfBoundsException ex) {
+                            System.out.println("Invalid car number!");
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    private class ReturnCarCommand extends Command {
+        private final Customer customer;
+
+        private ReturnCarCommand(Customer customer) {
+            this.customer = customer;
+        }
+
+        @Override
+        void execute() {
+            if (customer.getCar() == null) {
+                System.out.println("You didn't rent a car!");
+            } else {
+                db.updateCarRental(customer, customer.getCar(), false);
+                customer.setCar(null);
+                System.out.println("You've returned a rented car!");
+            }
+        }
+    }
+
+    private class ShowRentedCarCommand extends Command {
+        private final Customer customer;
+
+        private ShowRentedCarCommand(Customer customer) {
+            this.customer = customer;
+        }
+
+        @Override
+        void execute() {
+            if (customer.getCar() == null) {
+                System.out.println("You didn't rent a car!");
+            } else {
+                System.out.println("Your rented car:");
+                System.out.println(customer.getCar().getName());
+                System.out.println("Company:");
+                System.out.println(customer.getCar().getCompany().getName());
             }
         }
     }

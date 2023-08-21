@@ -3,7 +3,7 @@ package carsharing;
 public class Customer {
     private int id;
     private final String name;
-    private final Car car;
+    private Car car;
 
     public Customer(int id, String name, Car car) {
         this.id = id;
@@ -30,5 +30,9 @@ public class Customer {
 
     public Car getCar() {
         return car;
+    }
+
+    public void setCar(Car car) {
+        this.car = car;
     }
 }

@@ -7,6 +7,7 @@ import carsharing.Customer;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Database {
     private final String CREATE_COMPANY_TB = """
@@ -31,8 +32,8 @@ public class Database {
             CREATE TABLE IF NOT EXISTS CUSTOMER (
             id INT PRIMARY KEY AUTO_INCREMENT,
             name VARCHAR(255) UNIQUE NOT NULL,
-            rent_car_id INT,
-            CONSTRAINT fk_car FOREIGN KEY (rent_car_id)
+            rented_car_id INT,
+            CONSTRAINT fk_car FOREIGN KEY (rented_car_id)
             REFERENCES CAR(id)
             ON DELETE CASCADE
             ON UPDATE CASCADE
@@ -43,10 +44,11 @@ public class Database {
     private final String INSERT_CUSTOMER = "INSERT INTO CUSTOMER (name) VALUES (?);";
     private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY;";
     private final String SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMER;";
+    private final String SELECT_CAR_BY_ID = "SELECT * FROM CAR WHERE id = ?;";
     private final String SELECT_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ?;";
     private final String SELECT_AVAILABLE_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ? AND rented = FALSE;";
-    private final String RENT_CAR = "UPDATE CAR SET rented = 1 WHERE id = ?;";
-    private final String UPDATE_CUSTOMER_CAR = "UPDATE CUSTOMER SET rent_car_id = ? WHERE id = ?;";
+    private final String RENT_CAR = "UPDATE CAR SET rented = ? WHERE id = ?;";
+    private final String UPDATE_CUSTOMER_CAR = "UPDATE CUSTOMER SET rented_car_id = ? WHERE id = ?;";
     private String URL = "jdbc:h2:./src/carsharing/db/";
     private Connection conn;
 
@@ -164,7 +166,14 @@ public class Database {
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String name = rs.getString("name");
-                customers.add(new Customer(id, name, null));
+                Integer carId = rs.getInt("rented_car_id");
+
+                if (carId != null) {
+                    Optional<Car> car = getCarById(carId);
+                    customers.add(new Customer(id, name, car.orElse(null)));
+                } else {
+                    customers.add(new Customer(id, name, null));
+                }
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -207,12 +216,36 @@ public class Database {
         return cars;
     }
 
-    public void rentCar(Customer customer, Car car) {
+    public Optional<Car> getCarById(int id) {
+        PreparedStatement st = null;
+        ResultSet rs = null;
+        try {
+            st = getConnection().prepareStatement(SELECT_CAR_BY_ID);
+            st.setInt(1, id);
+
+            rs = st.executeQuery();
+
+            if (rs.next()) {
+                String name = rs.getString("name");
+                int companyId = rs.getInt("company_id");
+                Company company = getAllCompanies().stream().filter(c -> c.getId() == companyId).findAny().orElse(null);
+                return Optional.of(new Car(id, name, company));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } finally {
+            closeResultSet(rs);
+            closeStatement(st);
+        }
+        return Optional.empty();
+    }
+
+    public void updateCarRental(Customer customer, Car car, boolean renting) {
         try {
             getConnection().setAutoCommit(false);
 
-            updateCarRental(car);
-            linkCarToCustomer(car, customer);
+            updateRent(car, renting);
+            updateCustomerCar(car, customer, renting);
 
             getConnection().commit();
             getConnection().setAutoCommit(true);
@@ -226,17 +259,26 @@ public class Database {
         }
     }
 
-    private void linkCarToCustomer(Car car, Customer customer) throws SQLException {
+    private void updateCustomerCar(Car car, Customer customer, boolean renting) throws SQLException {
         PreparedStatement st = getConnection().prepareStatement(UPDATE_CUSTOMER_CAR);
-        st.setInt(1, car.getId());
+        if (renting) {
+            st.setInt(1, car.getId());
+        } else {
+            st.setNull(1, Types.INTEGER);
+        }
         st.setInt(2, customer.getId());
         st.executeUpdate();
         closeStatement(st);
     }
 
-    private void updateCarRental(Car car) throws SQLException {
+    private void updateRent(Car car, boolean renting) throws SQLException {
         PreparedStatement st = getConnection().prepareStatement(RENT_CAR);
-        st.setInt(1, car.getId());
+        if (renting) {
+            st.setInt(1, 1);
+        } else {
+            st.setInt(1, 0);
+        }
+        st.setInt(2, car.getId());
         st.executeUpdate();
         closeStatement(st);
     }
