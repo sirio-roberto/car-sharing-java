@@ -20,6 +20,7 @@ public class Database {
             id INT PRIMARY KEY AUTO_INCREMENT,
             name VARCHAR(255) UNIQUE NOT NULL,
             company_id INT NOT NULL,
+            rented BOOLEAN DEFAULT 0 NOT NULL,
             CONSTRAINT fk_company FOREIGN KEY (company_id)
             REFERENCES COMPANY(id)
             ON DELETE CASCADE
@@ -43,6 +44,9 @@ public class Database {
     private final String SELECT_ALL_COMPANIES = "SELECT * FROM COMPANY;";
     private final String SELECT_ALL_CUSTOMERS = "SELECT * FROM CUSTOMER;";
     private final String SELECT_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ?;";
+    private final String SELECT_AVAILABLE_CARS_BY_COMPANY = "SELECT * FROM CAR WHERE company_id = ? AND rented = FALSE;";
+    private final String RENT_CAR = "UPDATE CAR SET rented = 1 WHERE id = ?;";
+    private final String UPDATE_CUSTOMER_CAR = "UPDATE CUSTOMER SET rent_car_id = ? WHERE id = ?;";
     private String URL = "jdbc:h2:./src/carsharing/db/";
     private Connection conn;
 
@@ -172,11 +176,19 @@ public class Database {
     }
 
     public List<Car> getCarsByCompany(Company company) {
+        return getCarsByCompany(company, true);
+    }
+
+    public List<Car> getCarsByCompany(Company company, boolean showRented) {
         List<Car> cars = new ArrayList<>();
         PreparedStatement st = null;
         ResultSet rs = null;
         try {
-            st = getConnection().prepareStatement(SELECT_CARS_BY_COMPANY);
+            if (showRented) {
+                st = getConnection().prepareStatement(SELECT_CARS_BY_COMPANY);
+            } else {
+                st = getConnection().prepareStatement(SELECT_AVAILABLE_CARS_BY_COMPANY);
+            }
             st.setInt(1, company.getId());
 
             rs = st.executeQuery();
@@ -193,6 +205,40 @@ public class Database {
             closeStatement(st);
         }
         return cars;
+    }
+
+    public void rentCar(Customer customer, Car car) {
+        try {
+            getConnection().setAutoCommit(false);
+
+            updateCarRental(car);
+            linkCarToCustomer(car, customer);
+
+            getConnection().commit();
+            getConnection().setAutoCommit(true);
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            try {
+                getConnection().rollback();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void linkCarToCustomer(Car car, Customer customer) throws SQLException {
+        PreparedStatement st = getConnection().prepareStatement(UPDATE_CUSTOMER_CAR);
+        st.setInt(1, car.getId());
+        st.setInt(2, customer.getId());
+        st.executeUpdate();
+        closeStatement(st);
+    }
+
+    private void updateCarRental(Car car) throws SQLException {
+        PreparedStatement st = getConnection().prepareStatement(RENT_CAR);
+        st.setInt(1, car.getId());
+        st.executeUpdate();
+        closeStatement(st);
     }
 
     private static void closeStatement(Statement statement) {

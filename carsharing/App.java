@@ -26,6 +26,7 @@ public class App {
             System.out.println();
             switch (userAction) {
                 case "1" -> new ManagerLoginCommand().execute();
+                case "2" -> new ListCustomersCommand().execute();
                 case "3" -> new CreateCustomerCommand().execute();
             }
             System.out.println();
@@ -94,6 +95,35 @@ public class App {
         }
     }
 
+    private class CustomerLoginCommand extends Command {
+        private final Customer customer;
+
+        public CustomerLoginCommand(Customer customer) {
+            this.customer = customer;
+        }
+
+        @Override
+        void execute() {
+            System.out.println("""
+                    
+                    1. Rent a car
+                    2. Return a rented car
+                    3. My rented car
+                    0. Back""");
+
+            String userAction = scan.nextLine();
+            System.out.println();
+
+            switch (userAction) {
+                case "1" -> new RentCarCommand(customer).execute();
+            }
+
+            if (!"0".equals(userAction)) {
+                execute();
+            }
+        }
+    }
+
     private class ListCompaniesCommand extends Command {
 
         @Override
@@ -131,6 +161,28 @@ public class App {
                 System.out.println("Car list:");
                 for (int i = 0; i < cars.size(); i++) {
                     System.out.printf("%s. %s\n", i + 1, cars.get(i).getName());
+                }
+            }
+        }
+    }
+
+    private class ListCustomersCommand extends Command {
+
+        @Override
+        void execute() {
+            List<Customer> customers = db.getAllCustomers();
+            if (customers.isEmpty()) {
+                System.out.println("The customer list is empty!");
+            } else {
+                System.out.println("Customer list:");
+                for (int i = 0; i < customers.size(); i++) {
+                    System.out.printf("%s. %s\n", i + 1, customers.get(i).getName());
+                }
+                System.out.println("0. Back");
+
+                String userAction = scan.nextLine();
+                if (!"0".equals(userAction)) {
+                    new CustomerLoginCommand(customers.get(Integer.parseInt(userAction) - 1)).execute();
                 }
             }
         }
@@ -177,6 +229,49 @@ public class App {
 
             db.insertCustomer(customer);
             System.out.println("The customer was created!");
+        }
+    }
+
+    private class RentCarCommand extends Command {
+        private final Customer customer;
+
+        private RentCarCommand(Customer customer) {
+            this.customer = customer;
+        }
+
+        @Override
+        void execute() {
+            List<Company> companies = db.getAllCompanies();
+            if (companies.isEmpty()) {
+                System.out.println("The company list is empty!");
+            } else if (customer.getCar() != null) {
+                System.out.println("You've already rented a car!");
+            } else {
+                System.out.println("Choose the company:");
+                for (int i = 0; i < companies.size(); i++) {
+                    System.out.printf("%s. %s\n", i + 1, companies.get(i).getName());
+                }
+                System.out.println("0. Back");
+
+                String userAction = scan.nextLine();
+                if (!"0".equals(userAction)) {
+                    Company selectedCompany = companies.get(Integer.parseInt(userAction) - 1);
+                    List<Car> companyCars = db.getCarsByCompany(selectedCompany, false);
+
+                    if (companyCars.isEmpty()) {
+                        System.out.printf("No available cars in the '%s'\n", selectedCompany.getName());
+                    } else {
+                        System.out.println("Choose a car:");
+                        for (int i = 0; i < companyCars.size(); i++) {
+                            System.out.printf("%s. %s\n", i + 1, companyCars.get(i).getName());
+                        }
+
+                        String userChoice = scan.nextLine();
+                        Car chosenCar = companyCars.get(Integer.parseInt(userChoice) - 1);
+                        db.rentCar(customer, chosenCar);
+                    }
+                }
+            }
         }
     }
 }
