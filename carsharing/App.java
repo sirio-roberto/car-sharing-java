@@ -17,13 +17,19 @@ public class App {
         String userAction;
         do {
             System.out.println("""
-                1. Log in as a manager
-                0. Exit""");
+                    1. Log in as a manager
+                    2. Log in as a customer
+                    3. Create a customer
+                    0. Exit""");
 
             userAction = scan.nextLine();
-            if ("1".equals(userAction)) {
-                new ManagerLoginCommand().execute();
+            System.out.println();
+            switch (userAction) {
+                case "1" -> new ManagerLoginCommand().execute();
+                case "3" -> new CreateCustomerCommand().execute();
             }
+            System.out.println();
+
         } while (!"0".equals(userAction));
     }
 
@@ -158,6 +164,19 @@ public class App {
 
             db.insertCar(car);
             System.out.println("The car was created!");
+        }
+    }
+
+    private class CreateCustomerCommand extends Command {
+
+        @Override
+        void execute() {
+            System.out.println("Enter the customer name:");
+            String name = scan.nextLine();
+            Customer customer = new Customer(name, null);
+
+            db.insertCustomer(customer);
+            System.out.println("The customer was created!");
         }
     }
 }
